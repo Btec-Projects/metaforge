@@ -4,82 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Metaforge edits the author, dates, title and editing time inside Word (.docx) files, right in your browser.">
+<meta name="theme-color" content="#f4f6fb">
 <title>Metaforge: Word properties editor</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A8%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;600&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#dfe7f7;--dot:#b9c6e3;--sheet:#fbfcff;--fold:#c6d3f0;--ink:#0f1a30;--muted:#55627f;--line:#d6ddee;--field:#eef2fb;
---accent:#2358f0;--accent-ink:#fff;--warn:#ffb224;--ok:#0b7a4b;--err:#b3261e;
---display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;--body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1222;--dot:#1b2742;--sheet:#131d34;--fold:#22305a;--ink:#e9eefb;--muted:#9aa8c7;--line:#26335a;--field:#0c1426;--accent:#6b97ff;--accent-ink:#081330;--ok:#5fd493;--err:#ff8a80}}
-:root[data-theme="dark"]{--bg:#0b1222;--dot:#1b2742;--sheet:#131d34;--fold:#22305a;--ink:#e9eefb;--muted:#9aa8c7;--line:#26335a;--field:#0c1426;--accent:#6b97ff;--accent-ink:#081330;--ok:#5fd493;--err:#ff8a80}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*,*::before,*::after{box-sizing:inherit}
-body{margin:0;min-height:100vh;color:var(--ink);font:17px/1.55 var(--body);background-color:var(--bg);background-image:radial-gradient(var(--dot) 1.2px,transparent 1.2px);background-size:22px 22px}
-main{max-width:1000px;margin:0 auto;padding:36px 20px 56px}
-.top{display:flex;gap:16px;align-items:center;margin-bottom:28px;animation:rise .5s ease-out both}
-@keyframes rise{from{opacity:0;transform:translateY(8px)}}
-@media (prefers-reduced-motion:reduce){.top{animation:none}}
-.logo{flex:none;width:64px;height:64px}
-h1{font:800 clamp(2.2rem,6vw,3.4rem)/1 var(--display);letter-spacing:-.03em;margin:0}
-.tag{margin:6px 0 0;color:var(--muted)}
-h2{font:600 1.15rem/1.2 var(--display);margin:0 0 12px}
-#drop{display:flex;align-items:center;gap:18px;padding:26px 24px;background:var(--sheet);border:2px dashed var(--accent);border-radius:14px;cursor:pointer;transition:background .15s}
-#drop:hover,#drop.over,#drop:focus-within{background:var(--field)}
-#drop svg{flex:none;width:44px;height:44px;color:var(--accent)}
-#drop strong{display:block;font:600 1.2rem/1.2 var(--display)}
-#drop span{color:var(--muted);font-size:.95rem}
-#file{position:absolute;opacity:0;width:1px;height:1px}
-#editor{display:grid;grid-template-columns:1fr;gap:22px;margin-top:22px;align-items:start}
-#editor[hidden]{display:none}
-@media(min-width:900px){#editor{grid-template-columns:minmax(0,1fr) 330px}.inspector{position:sticky;top:20px}}
-.sheet{position:relative;background:var(--sheet);padding:34px 28px 24px;clip-path:polygon(0 0,calc(100% - 38px) 0,100% 38px,100% 100%,0 100%);box-shadow:0 1px 0 var(--line)}
-.sheet::after{content:"";position:absolute;top:0;right:0;width:38px;height:38px;background:linear-gradient(225deg,transparent 50%,var(--fold) 50%)}
-.fname{font:600 1.05rem var(--display);word-break:break-all;margin:0 44px 8px 0}
-.sheet section{padding:18px 0;border-top:1px solid var(--line)}
-.inspector{background:var(--sheet);border-radius:14px;border-left:5px solid var(--warn);padding:20px}
-label{display:block;font-weight:600;margin:14px 0 4px}
-label:first-child{margin-top:0}
-small{font-weight:400;color:var(--muted)}
-input[type=text],input[type=number],input[type=datetime-local]{width:100%;padding:11px 12px;font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:6px}
-input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
-.row{display:grid;grid-template-columns:1fr;gap:0 16px}
-@media(min-width:560px){.row{grid-template-columns:1fr 1fr}}
-.time{display:flex;gap:10px;align-items:center}
-.time input{width:110px}.time span{color:var(--muted)}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-button{font:600 1rem var(--body);border:0;border-radius:8px;padding:12px 20px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
-button.chip{background:transparent;color:var(--accent);border:1px solid var(--line);padding:6px 12px;font-size:.9rem;font-weight:400}
-button.chip:hover{border-color:var(--accent)}
-.check{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin:8px 0}
-.check input{margin-top:6px}.check b{font-weight:600}.count{color:var(--muted);margin-left:6px}
-table{width:100%;border-collapse:collapse;font-size:.92rem}
-td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-td:first-child{font-weight:600;white-space:nowrap}td:nth-child(2){color:var(--muted)}td:nth-child(3){color:var(--ok);font-weight:600}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-#msg{margin-top:14px;min-height:1.4em}#msg.ok{color:var(--ok)}#msg.err{color:var(--err)}
-.foot{color:var(--muted);font-size:.85rem;margin-top:28px}
-</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <main>
   <header class="top">
     <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 4h28l12 12v44H12z" fill="var(--sheet)" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/><path d="M40 4v12h12" fill="var(--fold)" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/><path d="M20 30h24M20 38h24M20 46h14" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="50" cy="50" r="9" fill="var(--warn)"/><path d="M50 45v5l3 2" stroke="#0f1a30" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
-    <div><h1>Metaforge</h1><p class="tag">Edit the hidden details inside Word files.</p></div>
+    <div><h1>Metaforge</h1><p class="tag">A cleaner, more private way to prepare Word documents.</p></div>
+    <button type="button" id="theme" aria-label="Switch between light and dark theme" title="Switch theme">◐</button>
   </header>
 
+  <nav class="tabs" aria-label="Pages"><button type="button" id="tab_tool"><span class="ic">✎</span><span>Editor</span></button><button type="button" id="tab_how"><span class="ic">☰</span><span>How it works</span></button><button type="button" id="tab_faq"><span class="ic">?</span><span>Q&amp;A</span></button><button type="button" id="tab_credits"><span class="ic">★</span><span>Credits</span></button><button type="button" id="tab_terms"><span class="ic">§</span><span>Terms</span></button></nav>
+  <div class="trust"><span>Private: runs in your browser</span><span>No upload, no account</span><span>Your original is never changed</span><span>Works with Arabic and English</span></div>
+  <div id="tool">
+  <div class="flow"><div><b>1</b><strong>Open</strong>Drop a .docx</div><div><b>2</b><strong>Edit</strong>Details and cleanups</div><div><b>3</b><strong>Preview</strong>Check the changes</div><div><b>4</b><strong>Save</strong>Get an edited copy</div></div>
   <label id="drop" for="file">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4L8 8M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
-    <div><strong>Drop a .docx file here</strong><span>or click to choose one. It stays in your browser and is never uploaded.</span></div>
+    <div><strong>Drop a .docx file here</strong><span>or click to choose a document · processed locally in your browser</span></div>
   </label>
   <input id="file" type="file" accept=".docx">
+  <p class="fmeta sample-prompt">No file handy? <button type="button" class="chip" id="trySample">Try a sample file</button></p>
 
   <form id="editor" hidden>
     <div class="sheet">
       <p class="fname" id="fname"></p>
+      <p class="fmeta" id="fmeta"></p>
+      <div class="chips preset-actions"><button type="button" class="chip" id="presetSafe">Preset: Share safely</button></div>
+      <div id="inspect" class="inspect" aria-label="Hidden data found in this file"></div>
       <section>
         <h2>Who</h2>
         <label for="author">Author</label>
@@ -90,8 +47,12 @@ td:first-child{font-weight:600;white-space:nowrap}td:nth-child(2){color:var(--mu
         <div class="row">
           <div><label for="title">Title</label><input id="title" type="text" autocomplete="off"></div>
           <div><label for="company">Company</label><input id="company" type="text" autocomplete="off"></div>
+          <div><label for="subject">Subject</label><input id="subject" type="text" autocomplete="off"></div>
+          <div><label for="keywords">Keywords</label><input id="keywords" type="text" autocomplete="off"></div>
         </div>
-        <div class="chips"><button type="button" class="chip" id="clearPeople">Clear all names</button></div>
+        <label for="desc">Comments</label>
+        <input id="desc" type="text" autocomplete="off">
+        <div class="chips"><button type="button" class="chip" id="clearPeople">Clear personal info</button></div>
       </section>
       <section>
         <h2>When</h2>
@@ -107,6 +68,7 @@ td:first-child{font-weight:600;white-space:nowrap}td:nth-child(2){color:var(--mu
             <div class="chips"><button type="button" class="chip" data-now="modified">Set to now</button><button type="button" class="chip" id="afterCreated">Same as created</button></div>
           </div>
         </div>
+        <p id="warn" role="alert"></p>
       </section>
       <section>
         <h2>Total editing time</h2>
@@ -122,10 +84,16 @@ td:first-child{font-weight:600;white-space:nowrap}td:nth-child(2){color:var(--mu
         </div>
       </section>
       <section>
-        <h2>Tidy wordy phrases <small>(optional)</small></h2>
-        <div class="chips" style="margin:0 0 8px"><button type="button" class="chip" id="allRules">Select all</button><button type="button" class="chip" id="noRules">Select none</button></div>
+        <h2>Filler &amp; grammar check <small>(optional)</small></h2>
+        <div class="chips rule-actions"><button type="button" class="chip" id="allRules">Select all</button><button type="button" class="chip" id="noRules">Select none</button></div>
         <div id="rules"></div>
-        <small>Only text inside a single formatting run is changed, so phrases split by bold or italics are skipped. Review the result in Word.</small>
+        <small>The number beside each item is how many were found in your document. Checks are simple pattern rules for English, not a full grammar engine. Only text inside a single formatting run is changed, so phrases split by bold or italics are skipped. Review the result in Word.</small>
+      </section>
+      <section>
+        <h2>Clean characters <small>(optional)</small></h2>
+        <div id="chars"></div>
+        <label class="check"><input id="accept" type="checkbox"><span><b>Accept all tracked changes</b> <span class="count">deleted text is removed for good</span></span></label>
+        <small>These apply to the body, headers, footers and footnotes. They are not touched by “Select all”, so you choose them on purpose.</small>
       </section>
     </div>
     <aside class="inspector">
@@ -133,177 +101,74 @@ td:first-child{font-weight:600;white-space:nowrap}td:nth-child(2){color:var(--mu
       <div id="diff"></div>
       <div class="actions">
         <button type="submit">Save edited copy</button>
-        <button type="button" class="chip" id="reset">Reset</button>
+        <button type="button" class="chip" id="preview">Preview text changes</button><button type="button" class="chip" id="reset">Reset</button>
       </div>
+      <div id="prev"></div><p class="fmeta shortcut">Shortcut: <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>S</kbd></p>
     </aside>
   </form>
   <div id="msg" role="status" aria-live="polite"></div>
+  </div>
+  <section id="p_how" class="how" hidden>
+    <h2>How Metaforge works</h2>
+    <div class="flow"><div><b>1</b><strong>Open</strong>Drop a .docx</div><div><b>2</b><strong>Edit</strong>Details and cleanups</div><div><b>3</b><strong>Preview</strong>Check the changes</div><div><b>4</b><strong>Save</strong>Get an edited copy</div></div>
+    <p>Everything runs in your browser. Metaforge opens the .docx (a zip of XML files), changes only what you choose, and writes a new copy. The steps in detail:</p>
+    <ol>
+      <li><b>Open a file.</b> Drop a .docx onto the box, or click it to choose one. Nothing is uploaded; everything happens in your browser.</li>
+      <li><b>Edit the details.</b> Change the author, title, company, subject, keywords, comments, dates and editing time. The “Your changes” panel lists every difference from the original.</li>
+      <li><b>Optional cleanups.</b> Tick filler phrases or grammar fixes, and character cleanups such as removing periods, commas or Arabic diacritics. The number beside each item is how many were found.</li>
+      <li><b>Preview.</b> Press “Preview text changes” to see up to five before/after examples.</li>
+      <li><b>Save.</b> Press “Save edited copy” (or Ctrl/⌘ + S). Your original file is never changed; you get a new file ending in “-edited.docx”.</li>
+    </ol>
+    <h3>Handy buttons</h3>
+    <p><b>Share safely</b> clears names, company, subject, keywords and comments and accepts tracked changes, so hidden details don’t travel with the file. <b>Clear personal info</b> does the names part only. <b>Reset</b> returns every field to the original.</p>
+    <h3>Good to know</h3>
+    <p>Cleanups change text inside the document body, headers, footers and footnotes. Phrases split across bold or italic formatting are skipped. Grammar checks are simple English pattern rules, not a full grammar engine. Accepting tracked changes removes deleted text permanently in the saved copy.</p>
+    <p>Always open the saved copy in Word and read it before you send it. Keep your original as a backup.</p>
+    <h3>Questions</h3>
+    <p><b>Is my file uploaded?</b> No. It is read and saved locally in your browser.</p>
+    <p><b>Why didn’t a phrase change?</b> It may be split across formatting runs, or it may not match the exact wording of the rule.</p>
+    <p><b>Why are my choices already ticked?</b> Metaforge remembers your cleanup options. Press Reset to clear them.</p>
+  </section>
+  <section id="p_faq" class="how" hidden>
+    <h2>Questions and answers</h2>
+    <details><summary>Is my document uploaded anywhere?</summary><p>No. Metaforge reads and saves your file inside your browser. Nothing is sent to a server, and there is no account.</p></details>
+    <details><summary>Does it change my original file?</summary><p>No. You always get a new copy named “-edited.docx”. Your original stays exactly as it was.</p></details>
+    <details><summary>Does it work with .doc, .pdf or Google Docs?</summary><p>Only .docx files. Save older .doc files as .docx in Word first. For Google Docs, use File → Download → Microsoft Word.</p></details>
+    <details><summary>Why did Word change a value after I opened my edited copy?</summary><p>Word updates some properties, such as the last modified date and editing time, when you save the file again. Your edits are what Metaforge wrote into the file.</p></details>
+    <details><summary>Why didn’t a phrase or grammar rule change anything?</summary><p>Rules work inside one formatting run only. If a phrase is split by bold, italic or a different font, it is skipped. The wording must also match the rule.</p></details>
+    <details><summary>Does the grammar check understand every mistake?</summary><p>No. It uses simple English pattern rules for things like double spaces, repeated words and “a” versus “an”. Read your document yourself or use a full grammar tool for deeper checks.</p></details>
+    <details><summary>What do the Arabic options remove?</summary><p>Diacritics (fatha, damma, kasra, their tanwin forms, shadda and sukun), tatweel stretching, and the Arabic comma. The words themselves are not changed.</p></details>
+    <details><summary>What does “Accept all tracked changes” do?</summary><p>It keeps tracked insertions as normal text and deletes tracked deletions for good in the saved copy. Comments are not removed.</p></details>
+    <details><summary>Why are some options already ticked?</summary><p>Metaforge remembers your cleanup choices in this browser. Press Reset to clear them.</p></details>
+    <details><summary>The file won’t open. What now?</summary><p>It may be damaged, password-protected or not a real .docx. Try opening it in Word, saving a fresh copy, and loading that.</p></details>
+  </section>
+  <section id="p_credits" class="how" hidden>
+    <h2>Credits</h2>
+    <p><b>Metaforge</b> was designed and built with Claude, an AI assistant made by Anthropic.</p>
+    <h3>Open-source and free resources</h3>
+    <p><b>JSZip</b> by Stuart Knightley and contributors reads and writes the .docx files (dual-licensed MIT or GPLv3).</p>
+    <p><b>Bricolage Grotesque</b> and <b>IBM Plex Sans</b> are the typefaces, served by Google Fonts under the SIL Open Font License.</p>
+    <h3>Trademarks</h3>
+    <p>Microsoft and Word are trademarks of Microsoft Corporation. Metaforge is independent and is not affiliated with or endorsed by Microsoft.</p>
+  </section>
+  <section id="p_terms" class="how" hidden>
+    <h2>Terms of use</h2>
+    <p>A plain-language summary, not legal advice. By using Metaforge you agree to the following.</p>
+    <h3>1. As is</h3>
+    <p>Metaforge is provided free and as is, with no warranty of any kind. It may contain mistakes.</p>
+    <h3>2. Your files</h3>
+    <p>Files are processed in your browser and are not uploaded or stored by Metaforge. Keep a backup of every original. You are responsible for checking each edited copy before you use or share it.</p>
+    <h3>3. Responsible use</h3>
+    <p>You are responsible for the documents you edit and for how you use them. Editing your own details, for example to protect your privacy, is a good use. Do not use Metaforge to mislead others about who wrote a document, when it was made or how long it took, for example in schoolwork, legal, employment or official settings, or to change documents you have no right to edit.</p>
+    <h3>4. Liability</h3>
+    <p>To the fullest extent allowed by law, the makers are not liable for lost, damaged or altered files, or for any result of using Metaforge.</p>
+    <h3>5. Changes</h3>
+    <p>These terms and the tool may change at any time.</p>
+  </section>
   <p class="foot">Metaforge runs entirely in your browser. Dates show in your local time zone and are stored in UTC. Word may update some values the next time you save the file.</p>
+  <div class="links"><button type="button" class="chip" data-go="how">How it works</button><button type="button" class="chip" data-go="faq">Q&amp;A</button><button type="button" class="chip" data-go="credits">Credits</button><button type="button" class="chip" data-go="terms">Terms</button></div>
 </main>
 
-<script>
-(function(){
-  var $=function(id){return document.getElementById(id)};
-  var zip=null,fileName="",orig={},coreXml="",appXml="",docXml="";
-  var up=function(s){return s.charAt(0).toUpperCase()+s.slice(1)};
-
-  // Each rule: re matches with groups (lead)(match)(next); rep builds the replacement.
-  var SO="(^|[.!?]\\s+)";
-  var RULES=[
-    {id:"openers",label:"Opening connectors",ex:"“Moreover,” “Furthermore,” “Additionally,” “In conclusion,”",
-      re:new RegExp(SO+"(?:Moreover|Furthermore|Additionally|In conclusion|In summary|Overall),\\s+(\\S)","g"),rep:function(m,a,b){return a+up(b)}},
-    {id:"noting",label:"“It is important to note that”",ex:"",
-      re:/(^|[.!?]\s+)?[Ii]t(?: is|’s|'s) (?:important|worth|crucial) (?:to note|noting|to mention) that\s+(\S)/g,
-      rep:function(m,a,b){return a?a+up(b):b}},
-    {id:"opening",label:"Cliché openers",ex:"“In today’s fast-paced world,” “In the ever-evolving landscape of”",
-      re:new RegExp(SO+"In (?:today’s|today's) (?:fast-paced |digital |modern )?world,\\s+(\\S)","g"),rep:function(m,a,b){return a+up(b)}},
-    {id:"delve",label:"“delve into” → “look into”",ex:"also “delves,” “delving”",
-      re:/\b(D|d)elve(s|d)?\b( into)?/g,rep:function(m,c,s,i){var w=(c==="D"?"L":"l")+"ook"+(s==="s"?"s":s==="d"?"ed":"");return w+(i?" into":"")}},
-    {id:"utilize",label:"“utilize” → “use”",ex:"",
-      re:/\b(U|u)tili[sz](e|es|ed|ing)\b/g,
-      rep:function(m,c,f){return (c==="U"?"U":"u")+{e:"se",es:"ses",ed:"sed",ing:"sing"}[f]}},
-    {id:"tapestry",label:"“rich tapestry of” → “mix of”",ex:"",re:/\b(?:rich )?tapestry of\b/g,rep:function(){return "mix of"}},
-    {id:"testament",label:"“a testament to” → “proof of”",ex:"",re:/\b(a|A) testament to\b/g,rep:function(m,c){return c==="A"?"Proof of":"proof of"}},
-    {id:"landscape",label:"“navigate the complexities of” → “handle”",ex:"",re:/\b(N|n)avigat(?:e|ing) the complexities of\b/g,rep:function(m,c){return (c==="N"?"H":"h")+"andle"}}
-  ];
-  function applyRules(text,ids,counter){
-    RULES.forEach(function(r){
-      if(ids.indexOf(r.id)<0)return;
-      text=text.replace(r.re,function(){counter[r.id]=(counter[r.id]||0)+1;return r.rep.apply(null,arguments)});
-    });
-    return text;
-  }
-  function mapRuns(xml,fn){
-    return xml.replace(/(<w:t(?:\s[^>]*)?>)([^<]*)(<\/w:t>)/g,function(_,o,t,c){return o+esc(fn(unesc(t)))+c});
-  }
-  function msg(t,c){var m=$("msg");m.textContent=t;m.className=c||""}
-  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
-  function unesc(s){return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&")}
-  function getTag(xml,tag){var m=xml.match(new RegExp("<"+tag+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+tag+">"));return m?unesc(m[1]):""}
-  function setTag(xml,tag,val,attrs){
-    var re=new RegExp("<"+tag+"((?:\\s[^>]*)?)>[\\s\\S]*?</"+tag+">"),safe=esc(val);
-    if(re.test(xml))return xml.replace(re,function(_,a){return "<"+tag+a+">"+safe+"</"+tag+">"});
-    var self=new RegExp("<"+tag+"(?:\\s[^>]*)?/>"),el="<"+tag+(attrs||"")+">"+safe+"</"+tag+">";
-    if(self.test(xml))return xml.replace(self,el);
-    return xml.replace(/<\/(cp:coreProperties|Properties)>\s*$/,el+"</$1>");
-  }
-  var pad=function(n){return String(n).padStart(2,"0")};
-  function toLocalInput(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds())}
-  function fromIso(iso){var d=new Date(iso);return isNaN(d)?"":toLocalInput(d)}
-  function toIso(local){var d=new Date(local);return isNaN(d)?"":d.toISOString().replace(/\.\d{3}Z$/,"Z")}
-  function setTime(total){total=Math.max(0,total|0);$("hours").value=Math.floor(total/60);$("mins").value=total%60}
-  function getTime(){return (parseInt($("hours").value,10)||0)*60+(parseInt($("mins").value,10)||0)}
-  function fill(){
-    $("author").value=orig.author;$("title").value=orig.title;$("company").value=orig.company;$("lastBy").value=orig.lastBy;
-    $("created").value=fromIso(orig.created);$("modified").value=fromIso(orig.modified);
-    setTime(parseInt(orig.minutes,10)||0);
-    $("sync").checked=false;
-    document.querySelectorAll("#rules input").forEach(function(i){i.checked=false});renderDiff();
-  }
-  function buildRules(){
-    var counter={};mapRuns(docXml,function(t){applyRules(t,RULES.map(function(r){return r.id}),counter);return t});
-    $("rules").innerHTML="";
-    RULES.forEach(function(r){
-      var l=document.createElement("label");l.className="check";
-      var i=document.createElement("input");i.type="checkbox";i.value=r.id;
-      var s=document.createElement("span");
-      var n=counter[r.id]||0;
-      s.innerHTML="<b></b><span class='count'></span>";
-      s.firstChild.textContent=r.label;s.lastChild.textContent=n+" found";
-      l.appendChild(i);l.appendChild(s);$("rules").appendChild(l);
-    });
-  }
-
-  async function load(f){
-    if(!f)return;msg("");
-    if(!/\.docx$/i.test(f.name)){msg("That file is not a .docx. Choose a Word document saved as .docx.","err");return}
-    try{
-      zip=await JSZip.loadAsync(await f.arrayBuffer());
-      var core=zip.file("docProps/core.xml"),app=zip.file("docProps/app.xml"),doc=zip.file("word/document.xml");
-      if(!core){msg("This file has no document properties, so there is nothing to edit.","err");zip=null;return}
-      coreXml=await core.async("string");appXml=app?await app.async("string"):"";docXml=doc?await doc.async("string"):"";
-      fileName=f.name;
-      orig={author:getTag(coreXml,"dc:creator"),lastBy:getTag(coreXml,"cp:lastModifiedBy"),
-        created:getTag(coreXml,"dcterms:created"),modified:getTag(coreXml,"dcterms:modified"),
-        minutes:getTag(appXml,"TotalTime")||"0",title:getTag(coreXml,"dc:title"),company:getTag(appXml,"Company")};
-      $("fname").textContent=fileName;
-      buildRules();fill();
-      $("hours").disabled=$("mins").disabled=!app;
-      $("editor").hidden=false;
-      msg("File loaded. Change what you need, then save.","ok");
-    }catch(e){zip=null;$("editor").hidden=true;msg("Couldn’t read that file. It may be damaged or password-protected.","err")}
-  }
-
-  function fmtT(t){return Math.floor(t/60)+"h "+(t%60)+"m"}
-  function fmtD(v){var d=new Date(v);return isNaN(d)?"(not set)":d.toLocaleString()}
-  function renderDiff(){
-    if(!zip)return;
-    var rows=[];
-    function add(l,a,b){if(a!==b)rows.push([l,a||"(empty)",b||"(empty)"])}
-    add("Author",orig.author,$("author").value);
-    add("Last modified by",orig.lastBy,$("lastBy").value);
-    add("Title",orig.title,$("title").value);
-    add("Company",orig.company,$("company").value);
-    add("Created",fmtD(orig.created),fmtD($("created").value));
-    add("Last modified",fmtD(orig.modified),fmtD($("modified").value));
-    add("Editing time",fmtT(parseInt(orig.minutes,10)||0),fmtT(getTime()));
-    var n=document.querySelectorAll("#rules input:checked").length;
-    if(n)rows.push(["Wordy phrases",n+" rule"+(n>1?"s":"")+" selected","applied on save"]);
-    var box=$("diff");box.textContent="";
-    if(!rows.length){box.textContent="Nothing changed yet.";return}
-    var t=document.createElement("table");
-    rows.forEach(function(r){var tr=t.insertRow();r.forEach(function(v){tr.insertCell().textContent=v})});
-    box.appendChild(t);
-  }
-  $("editor").addEventListener("input",renderDiff);
-  $("editor").addEventListener("click",function(){setTimeout(renderDiff,0)});
-  $("clearPeople").addEventListener("click",function(){$("author").value="";$("lastBy").value="";$("company").value="";renderDiff()});
-  function setAll(v){document.querySelectorAll("#rules input").forEach(function(i){i.checked=v});renderDiff()}
-  $("allRules").addEventListener("click",function(){setAll(true)});
-  $("noRules").addEventListener("click",function(){setAll(false)});
-  $("file").addEventListener("change",function(e){load(e.target.files[0])});
-  var drop=$("drop");
-  ["dragenter","dragover"].forEach(function(t){drop.addEventListener(t,function(e){e.preventDefault();drop.classList.add("over")})});
-  ["dragleave","drop"].forEach(function(t){drop.addEventListener(t,function(e){e.preventDefault();drop.classList.remove("over")})});
-  drop.addEventListener("drop",function(e){load(e.dataTransfer.files[0])});
-  $("reset").addEventListener("click",function(){fill();msg("Reset to the original values.","")});
-  $("sync").addEventListener("change",function(e){if(e.target.checked)$("lastBy").value=$("author").value});
-  $("author").addEventListener("input",function(){if($("sync").checked)$("lastBy").value=$("author").value});
-  document.querySelectorAll("[data-now]").forEach(function(b){b.addEventListener("click",function(){$(b.dataset.now).value=toLocalInput(new Date())})});
-  $("afterCreated").addEventListener("click",function(){$("modified").value=$("created").value});
-  document.querySelectorAll("[data-add]").forEach(function(b){b.addEventListener("click",function(){setTime(getTime()+parseInt(b.dataset.add,10))})});
-  $("zero").addEventListener("click",function(){setTime(0)});
-  [$("hours"),$("mins")].forEach(function(i){i.addEventListener("change",function(){setTime(getTime())})});
-
-  $("editor").addEventListener("submit",async function(e){
-    e.preventDefault();if(!zip)return;
-    var cIso=toIso($("created").value),mIso=toIso($("modified").value);
-    if(!cIso||!mIso){msg("Enter both a created date and a last modified date.","err");return}
-    try{
-      var core=setTag(coreXml,"dc:creator",$("author").value);
-      core=setTag(core,"cp:lastModifiedBy",$("lastBy").value);core=setTag(core,"dc:title",$("title").value);
-      var dt=' xsi:type="dcterms:W3CDTF"';
-      core=setTag(core,"dcterms:created",cIso,dt);core=setTag(core,"dcterms:modified",mIso,dt);
-      zip.file("docProps/core.xml",core);
-      if(appXml){var ax=setTag(appXml,"Company",$("company").value);if(!$("hours").disabled)ax=setTag(ax,"TotalTime",String(getTime()));zip.file("docProps/app.xml",ax)}
-      var ids=[].slice.call(document.querySelectorAll("#rules input:checked")).map(function(i){return i.value});
-      var changed=0;
-      if(ids.length&&docXml){
-        var c={};zip.file("word/document.xml",mapRuns(docXml,function(t){return applyRules(t,ids,c)}));
-        Object.keys(c).forEach(function(k){changed+=c[k]});
-      }
-      var blob=await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
-      var out=fileName.replace(/\.docx$/i,"")+"-edited.docx",dl=null;
-      try{dl=await claude.use("downloads")}catch(_){}
-      if(dl){await dl.save({filename:out,data:blob})}
-      else{var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=out;document.body.appendChild(a);a.click();a.remove()}
-      msg("Saved "+out+(ids.length?" ("+changed+" phrase"+(changed===1?"":"s")+" changed).":"."),"ok");
-    }catch(err){
-      if(err&&err.code==="declined")msg("Save cancelled.","");
-      else msg("Couldn’t save the file: "+((err&&err.message)||"unknown error"),"err");
-    }
-  });
-})();
-</script>
+<script src="script.js" defer></script>
 </body>
 </html>
