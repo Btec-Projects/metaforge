@@ -1,29 +1,28 @@
 # Metaforge
 
-Edit the hidden details inside Word (.docx) files: author, last modified by, title, company, created and modified dates, and total editing time. It can also tidy a few wordy phrases in the document text.
+A small web tool for editing the hidden details inside Word (.docx) files: author, last modified by, title, company, created and modified dates, and total editing time. It can also swap out a few overused phrases in the text.
 
-Everything runs in your browser. Files are never uploaded.
+It all runs in your browser. Your files never leave your computer.
 
-## Use it
+## How to use it
 
-Open the live page (see below) or open `index.html` in a browser, drop in a `.docx` file, change what you need, and click **Save edited copy**. Your original file is not touched.
+Open the live page, or open `index.html` in any browser. Drop in a .docx file, change what you want, and click **Save edited copy**. Your original file stays untouched.
 
-## Publish on GitHub Pages
+## Put your own copy online
 
-1. Create a new repository and upload `index.html` and this `README.md`.
+1. Make a new GitHub repository and upload `index.html` and this README.
 2. Go to **Settings > Pages**.
 3. Under **Build and deployment**, choose **Deploy from a branch**, pick `main` and `/ (root)`, then save.
-4. After a minute your site is live at `https://YOUR-USERNAME.github.io/YOUR-REPO/`.
+4. After a minute or two the site is live at `https://YOUR-USERNAME.github.io/YOUR-REPO/`.
 
 ## How it works
 
-A .docx file is a zip archive. Metaforge uses [JSZip](https://stuk.github.io/jszip/) to open it, edits `docProps/core.xml` and `docProps/app.xml`, and zips it again. Phrase tidying edits `word/document.xml`.
+A .docx file is really a zip archive. Metaforge opens it with [JSZip](https://stuk.github.io/jszip/), edits `docProps/core.xml` and `docProps/app.xml`, then zips it back up. The phrase tool edits `word/document.xml`.
 
-## Good to know
+## Notes
 
-- Word may overwrite some values the next time the file is saved.
-- Phrases split across formatting runs (bold, italics) are skipped by the tidy tool.
-- Use it honestly. Don't use it to misrepresent who wrote a document where authorship matters.
+- Word may overwrite some of these values the next time you save the file.
+- Phrases split across bold or italic text are skipped by the phrase tool.
 
 ## License
 
