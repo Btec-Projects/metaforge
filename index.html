@@ -7,31 +7,42 @@
 <meta name="theme-color" content="#f4f6fb">
 <title>Metaforge: Word properties editor</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A8%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;600&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
-<link rel="stylesheet" href="styles.css">
+<script src="jszip.min.js" defer></script>
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 <main>
   <header class="top">
     <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 4h28l12 12v44H12z" fill="var(--sheet)" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/><path d="M40 4v12h12" fill="var(--fold)" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/><path d="M20 30h24M20 38h24M20 46h14" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><circle cx="50" cy="50" r="9" fill="var(--warn)"/><path d="M50 45v5l3 2" stroke="#0f1a30" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
     <div><h1>Metaforge</h1><p class="tag">A cleaner, more private way to prepare Word documents.</p></div>
-    <button type="button" id="theme" aria-label="Switch between light and dark theme" title="Switch theme">◐</button>
+    <label class="theme-control" for="themeMode">Theme
+      <select id="themeMode" aria-label="Color theme">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
   </header>
 
   <nav class="tabs" aria-label="Pages"><button type="button" id="tab_tool"><span class="ic">✎</span><span>Editor</span></button><button type="button" id="tab_how"><span class="ic">☰</span><span>How it works</span></button><button type="button" id="tab_faq"><span class="ic">?</span><span>Q&amp;A</span></button><button type="button" id="tab_credits"><span class="ic">★</span><span>Credits</span></button><button type="button" id="tab_terms"><span class="ic">§</span><span>Terms</span></button></nav>
-  <div class="trust"><span>Private: runs in your browser</span><span>No upload, no account</span><span>Your original is never changed</span><span>Works with Arabic and English</span></div>
+  <div class="trust"><span>Private: runs in your browser</span><span>No upload, no account</span><span>Your original is never changed</span><span>Works offline</span></div>
   <div id="tool">
   <div class="flow"><div><b>1</b><strong>Open</strong>Drop a .docx</div><div><b>2</b><strong>Edit</strong>Details and cleanups</div><div><b>3</b><strong>Preview</strong>Check the changes</div><div><b>4</b><strong>Save</strong>Get an edited copy</div></div>
   <label id="drop" for="file">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4L8 8M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
     <div><strong>Drop a .docx file here</strong><span>or click to choose a document · processed locally in your browser</span></div>
+    <input id="file" type="file" accept=".docx" multiple aria-describedby="fileHelp">
   </label>
-  <input id="file" type="file" accept=".docx">
+  <p id="fileHelp" class="sr-only">Choose one or more Word documents. Multiple files are edited using the currently displayed metadata and cleanup options.</p>
   <p class="fmeta sample-prompt">No file handy? <button type="button" class="chip" id="trySample">Try a sample file</button></p>
+  <section id="batchPanel" class="batch-panel" hidden aria-labelledby="batchTitle">
+    <h2 id="batchTitle">Batch files</h2>
+    <p id="batchHelp">Batch save applies the metadata and cleanup options shown below to every selected document. It downloads one ZIP containing edited copies.</p>
+    <ul id="batchList"></ul>
+    <button type="button" class="chip" id="clearBatch">Clear batch</button>
+  </section>
 
-  <form id="editor" hidden>
+  <form id="editor" hidden aria-label="Document editor">
     <div class="sheet">
       <p class="fname" id="fname"></p>
       <p class="fmeta" id="fmeta"></p>
@@ -95,14 +106,30 @@
         <label class="check"><input id="accept" type="checkbox"><span><b>Accept all tracked changes</b> <span class="count">deleted text is removed for good</span></span></label>
         <small>These apply to the body, headers, footers and footnotes. They are not touched by “Select all”, so you choose them on purpose.</small>
       </section>
+      <section>
+        <h2>Privacy cleanup <small>(optional)</small></h2>
+        <label class="check"><input id="removeComments" type="checkbox"><span><b>Remove document comments</b><span class="count">comment text and references are permanently removed</span></span></label>
+        <label class="check"><input id="removeCustom" type="checkbox"><span><b>Remove custom document properties</b><span class="count">custom properties part and package references are removed</span></span></label>
+        <small>Review the privacy scan before saving. These removals cannot be undone in the saved copy.</small>
+      </section>
     </div>
     <aside class="inspector">
       <h2>Your changes</h2>
       <div id="diff"></div>
+      <section class="privacy-review" aria-labelledby="privacyTitle">
+        <h3 id="privacyTitle">Privacy review</h3>
+        <ul id="privacyReview"></ul>
+        <p class="review-note">This scan checks common Word metadata, comments, tracked changes, external links, and embedded files. It cannot guarantee that every hidden or identifying detail has been found.</p>
+      </section>
       <div class="actions">
         <button type="submit">Save edited copy</button>
         <button type="button" class="chip" id="preview">Preview text changes</button><button type="button" class="chip" id="reset">Reset</button>
+        <button type="button" class="chip" id="undo" disabled>Undo last change</button>
+        <button type="button" class="chip" id="saveAgain" hidden>Save another copy</button>
+        <button type="button" class="chip" id="batchSave" hidden>Save all as ZIP</button>
       </div>
+      <progress id="progress" max="100" value="0" hidden aria-label="Save progress"></progress>
+      <p id="progressLabel" class="fmeta" hidden aria-live="polite"></p>
       <div id="prev"></div><p class="fmeta shortcut">Shortcut: <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>S</kbd></p>
     </aside>
   </form>
@@ -111,18 +138,18 @@
   <section id="p_how" class="how" hidden>
     <h2>How Metaforge works</h2>
     <div class="flow"><div><b>1</b><strong>Open</strong>Drop a .docx</div><div><b>2</b><strong>Edit</strong>Details and cleanups</div><div><b>3</b><strong>Preview</strong>Check the changes</div><div><b>4</b><strong>Save</strong>Get an edited copy</div></div>
-    <p>Everything runs in your browser. Metaforge opens the .docx (a zip of XML files), changes only what you choose, and writes a new copy. The steps in detail:</p>
+    <p>Everything runs in your browser. Metaforge opens the .docx (a zip of XML files), changes only what you choose, and writes a new copy. Its required library is bundled locally, so the app does not need a network connection after it has been downloaded. The steps in detail:</p>
     <ol>
       <li><b>Open a file.</b> Drop a .docx onto the box, or click it to choose one. Nothing is uploaded; everything happens in your browser.</li>
       <li><b>Edit the details.</b> Change the author, title, company, subject, keywords, comments, dates and editing time. The “Your changes” panel lists every difference from the original.</li>
       <li><b>Optional cleanups.</b> Tick filler phrases or grammar fixes, and character cleanups such as removing periods, commas or Arabic diacritics. The number beside each item is how many were found.</li>
       <li><b>Preview.</b> Press “Preview text changes” to see up to five before/after examples.</li>
-      <li><b>Save.</b> Press “Save edited copy” (or Ctrl/⌘ + S). Your original file is never changed; you get a new file ending in “-edited.docx”.</li>
+      <li><b>Save.</b> Press “Save edited copy” (or Ctrl/⌘ + S). Your original file is never changed; you get a new file ending in “-edited.docx”. For a batch, one ZIP contains a copy of every selected document.</li>
     </ol>
     <h3>Handy buttons</h3>
-    <p><b>Share safely</b> clears names, company, subject, keywords and comments and accepts tracked changes, so hidden details don’t travel with the file. <b>Clear personal info</b> does the names part only. <b>Reset</b> returns every field to the original.</p>
+    <p><b>Share safely</b> clears common personal metadata, accepts tracked changes, and selects removal of document comments and custom properties. Review the privacy scan before saving. <b>Clear personal info</b> clears the metadata fields only. <b>Reset</b> returns fields and cleanup options to their original values.</p>
     <h3>Good to know</h3>
-    <p>Cleanups change text inside the document body, headers, footers and footnotes. Phrases split across bold or italic formatting are skipped. Grammar checks are simple English pattern rules, not a full grammar engine. Accepting tracked changes removes deleted text permanently in the saved copy.</p>
+    <p>Cleanups change text inside the document body, headers, footers and footnotes. Phrases split across bold or italic formatting are skipped. Grammar checks are simple English pattern rules, not a full grammar engine. Accepting tracked changes and removing comments or custom properties are permanent in the saved copy. The privacy scan flags external links and embedded files but does not remove them.</p>
     <p>Always open the saved copy in Word and read it before you send it. Keep your original as a backup.</p>
     <h3>Questions</h3>
     <p><b>Is my file uploaded?</b> No. It is read and saved locally in your browser.</p>
@@ -138,7 +165,7 @@
     <details><summary>Why didn’t a phrase or grammar rule change anything?</summary><p>Rules work inside one formatting run only. If a phrase is split by bold, italic or a different font, it is skipped. The wording must also match the rule.</p></details>
     <details><summary>Does the grammar check understand every mistake?</summary><p>No. It uses simple English pattern rules for things like double spaces, repeated words and “a” versus “an”. Read your document yourself or use a full grammar tool for deeper checks.</p></details>
     <details><summary>What do the Arabic options remove?</summary><p>Diacritics (fatha, damma, kasra, their tanwin forms, shadda and sukun), tatweel stretching, and the Arabic comma. The words themselves are not changed.</p></details>
-    <details><summary>What does “Accept all tracked changes” do?</summary><p>It keeps tracked insertions as normal text and deletes tracked deletions for good in the saved copy. Comments are not removed.</p></details>
+    <details><summary>What does the privacy cleanup remove?</summary><p>When selected, it removes comments and their package references, as well as custom document properties. Accepting tracked changes keeps insertions and permanently deletes tracked deletions. External links and embedded files are reported for review, not removed.</p></details>
     <details><summary>Why are some options already ticked?</summary><p>Metaforge remembers your cleanup choices in this browser. Press Reset to clear them.</p></details>
     <details><summary>The file won’t open. What now?</summary><p>It may be damaged, password-protected or not a real .docx. Try opening it in Word, saving a fresh copy, and loading that.</p></details>
   </section>
@@ -146,8 +173,8 @@
     <h2>Credits</h2>
     <p><b>Metaforge</b> was designed and built with Claude, an AI assistant made by Anthropic.</p>
     <h3>Open-source and free resources</h3>
-    <p><b>JSZip</b> by Stuart Knightley and contributors reads and writes the .docx files (dual-licensed MIT or GPLv3).</p>
-    <p><b>Bricolage Grotesque</b> and <b>IBM Plex Sans</b> are the typefaces, served by Google Fonts under the SIL Open Font License.</p>
+    <p><b>JSZip 3.10.1</b> by Stuart Knightley and contributors reads and writes .docx files (dual-licensed MIT or GPLv3). The library is bundled locally; see <code>JSZIP-LICENSE.txt</code>.</p>
+    <p>The interface uses system fonts so it works offline without contacting a font service.</p>
     <h3>Trademarks</h3>
     <p>Microsoft and Word are trademarks of Microsoft Corporation. Metaforge is independent and is not affiliated with or endorsed by Microsoft.</p>
   </section>
@@ -169,6 +196,6 @@
   <div class="links"><button type="button" class="chip" data-go="how">How it works</button><button type="button" class="chip" data-go="faq">Q&amp;A</button><button type="button" class="chip" data-go="credits">Credits</button><button type="button" class="chip" data-go="terms">Terms</button></div>
 </main>
 
-<script src="script.js" defer></script>
+<script src="script.js?v=7" defer></script>
 </body>
 </html>
